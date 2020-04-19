@@ -1,0 +1,46 @@
+server:
+  port: 9527
+
+spring:
+  application:
+    name: getway
+  cloud:
+    #配置gateway路由
+    #Gateway网关路由有两种配置方式:
+    #在配置文件ym|中配置
+    #代码中注入RouteLocator的Bean  ，以下为yml配置
+    gateway:
+      discovery:
+        locator:
+          enabled: true #开启从注册中心创建动态路由功能，利用微服务名称进行路由映射
+      routes:
+        - id: pay-create #路由ID ，无格式要求，但需要全局唯一
+          #uri: http://localhost:8081 #匹配成功后，进行访服务的地址 未开启动态路由方式
+          uri: lb://pay-server #开启动态路由后，匹配后提供的服务地址
+          predicates:
+            - Path=/pay/create/*  #断言 、路径匹配的路由格式 ，http://localhost:8081/pay/create/* 汇成此样式
+        - id: pay-get
+          #uri: http://localhost:8081 #未开启动态路由方式
+          uri: lb://pay-server #开启动态路由后，匹配后提供的服务地址
+          predicates:
+            - Path=/pay/get/*
+            #- After=2020-04-19T15:08:39.712+08:00[Asia/Shanghai] #设置什么时间之后可以使用地址
+            #-Before=2020-04-19T15:08:39.712+08:00[Asia/Shanghai] 设置什么时间之间可以使用地址
+            #- Between=2020-04-19T15:08:39.712+08:00[Asia/Shanghai] 设置什么时间之前可以使用地址
+            # - Cookie=username,ysw  #断言 Cookie访问 curl http://localhost:9527/pay/get/13 --cookie "username=ysw"
+            #- Header=X-Request-Id, \d+ #要求请求头待遇x-request-id属性，并且值为整数的正则表达式 curl http://localhost:9527/pay/get/13 --H "X-Request-Id:-123"
+            #- Host=**.ccssoft.com #curl http://localhost:9527/pay/get/13 --H "Host:www.ccssoft.com"
+            #- Method=GET 只允许get方法是有
+
+eureka:
+  client:
+    register-with-eureka: true #是否向服务中心注册自己
+    fetch-registry: true #是否从EurekaServer中查询已注册的服务
+    service-url:
+      #defaultZone: http://localhost:7001/eureka #单机版
+      defaultZone: http://eureka7002.com:7002/eureka,http://eureka7001.com:7001/eureka #集群版
+  instance:
+    instance-id: getway #修改微服务显示的机器名称
+    prefer-ip-address: true #是否显示微服务IP地址
+    #lease-renewal-interval-in-seconds: 1 #Eureka客户端向服务端发送心跳的时间间隔，单位为秒(默认 是30秒)
+    #lease-expiration-duration- in-seconds: 2 #Eureka服务端在收到最后一次心跳后等待时间上限，单位为秒(默认是90秒)，超时将剔除服务
